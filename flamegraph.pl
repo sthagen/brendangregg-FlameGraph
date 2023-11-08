@@ -718,6 +718,12 @@ foreach (@SortedData) {
 }
 flow($last, [], $time, $delta);
 
+if ($countname eq "samples") {
+	# If $countname is used, it's likely that we're not measuring in stack samples
+	# (e.g. time could be the unit), so don't warn.
+	warn "Stack count is low ($time). Did something go wrong?\n" if $time < 100;
+}
+
 warn "Ignored $ignored lines with invalid format\n" if $ignored;
 unless ($time) {
 	warn "ERROR: No stack counts found\n";
@@ -1225,8 +1231,10 @@ while (my ($id, $node) = each %Node) {
 		$y2 = $ypad1 + ($depth + 1) * $frameheight - $framepad;
 	}
 
+	# Add commas per perlfaq5:
+	# https://perldoc.perl.org/perlfaq5#How-can-I-output-my-numbers-with-commas-added?
 	my $samples = sprintf "%.0f", ($etime - $stime) * $factor;
-	(my $samples_txt = $samples) # add commas per perlfaq5
+	(my $samples_txt = $samples)
 		=~ s/(^[-+]?\d+?(?=(?>(?:\d{3})+)(?!\d))|\G\d{3}(?=\d))/$1,/g;
 
 	my $info;
@@ -1271,7 +1279,7 @@ while (my ($id, $node) = each %Node) {
 
 	my $chars = int( ($x2 - $x1) / ($fontsize * $fontwidth));
 	my $text = "";
-	if ($chars >= 3) { # room for one char plus two dots
+	if ($chars >= 3) { # room for one char plus two dots
 		$func =~ s/_\[[kwij]\]$//;	# strip any annotation
 		$text = substr $func, 0, $chars;
 		substr($text, -2, 2) = ".." if $chars < length $func;
